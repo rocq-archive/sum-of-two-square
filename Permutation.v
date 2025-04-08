@@ -42,7 +42,7 @@ Inductive permutation : list A -> list A -> Prop :=
   | permutation_trans :
       forall l1 l2 l3 : list A,
       permutation l1 l2 -> permutation l2 l3 -> permutation l1 l3.
-Hint Constructors permutation.
+Hint Constructors permutation : core.
 (* 
    Reflexivity
    *)
@@ -53,7 +53,7 @@ apply permutation_nil.
 intros a l1 H.
 apply permutation_skip with (1 := H).
 Qed.
-Hint Resolve permutation_refl.
+Hint Resolve permutation_refl : core.
 (* 
    Symmetry
    *)
@@ -133,7 +133,7 @@ elim l; simpl in |- *; auto.
 intros l1 l2 l3 H H0 H1 H2 l4 l5 H3.
 apply permutation_trans with (l2 ++ l4); auto.
 Qed.
-Hint Resolve permutation_app_comp.
+Hint Resolve permutation_app_comp : core.
 (* 
    Swap two sublists
    *)
@@ -141,7 +141,7 @@ Hint Resolve permutation_app_comp.
 Theorem permutation_app_swap :
  forall l1 l2, permutation (l1 ++ l2) (l2 ++ l1).
 intros l1; elim l1; auto.
-intros; rewrite <- app_nil_end; auto.
+intros; rewrite app_nil_r; auto.
 intros a l H l2.
 replace (l2 ++ a :: l) with ((l2 ++ a :: nil) ++ l).
 apply permutation_trans with (l ++ l2 ++ a :: nil); auto.
@@ -154,8 +154,8 @@ apply permutation_app_comp; auto.
 elim l2; simpl in |- *; auto.
 intros a0 l0 H0.
 apply permutation_trans with (a0 :: a :: l0); auto.
-apply (app_ass l2 (a :: nil) l).
-apply (app_ass l2 (a :: nil) l).
+apply sym_equal; apply (app_assoc l2 (a :: nil) l).
+apply sym_equal; apply (app_assoc l2 (a :: nil) l).
 Qed.
 (* 
    A transposition is a permutation
@@ -169,11 +169,11 @@ apply permutation_app_comp; auto.
 change
   (permutation ((a :: nil) ++ l2 ++ (b :: nil) ++ l3)
      ((b :: nil) ++ l2 ++ (a :: nil) ++ l3)) in |- *.
-repeat rewrite <- app_ass.
+repeat rewrite app_assoc.
 apply permutation_app_comp; auto.
 apply permutation_trans with ((b :: nil) ++ (a :: nil) ++ l2); auto.
 apply permutation_app_swap; auto.
-repeat rewrite app_ass.
+repeat rewrite <- app_assoc.
 apply permutation_app_comp; auto.
 apply permutation_app_swap; auto.
 Qed.
@@ -418,17 +418,18 @@ End permutation.
 (* 
    Hints
    *)
-Hint Constructors permutation.
-Hint Resolve permutation_refl.
-Hint Resolve permutation_app_comp.
-Hint Resolve permutation_app_swap.
+Hint Constructors permutation : core.
+Hint Resolve permutation_refl : core.
+Hint Resolve permutation_app_comp : core.
+Hint Resolve permutation_app_swap : core.
 (* 
    Implicits
    *)
-Implicit Arguments permutation [A].
-Implicit Arguments split_one [A].
-Implicit Arguments all_permutations [A].
-Implicit Arguments permutation_dec [A].
+
+Arguments permutation [A].
+Arguments split_one [A].
+Arguments all_permutations [A].
+Arguments permutation_dec [A].
 (* 
    Permutation is compatible with map
    *)
@@ -439,9 +440,9 @@ Theorem permutation_map :
 intros A B f l1 l2 H; elim H; simpl in |- *; auto.
 intros l0 l3 l4 H0 H1 H2 H3; apply permutation_trans with (2 := H3); auto.
 Qed.
-Hint Resolve permutation_map.
- 
-Let permutation_map_ex_aux :
+Hint Resolve permutation_map : core.
+
+Fact permutation_map_ex_aux :
   forall (A B : Set) (f : A -> B) l1 l2 l3,
   permutation l1 l2 ->
   l1 = map f l3 -> exists l4, permutation l4 l3 /\ l2 = map f l4.
@@ -488,7 +489,7 @@ Theorem permutation_flat_map :
  permutation l1 l2 -> permutation (flat_map f l1) (flat_map f l2).
 intros A B f l1 l2 H; elim H; simpl in |- *; auto.
 intros a b l; auto.
-repeat rewrite <- app_ass.
+repeat rewrite app_assoc.
 apply permutation_app_comp; auto.
 intros k3 l4 l5 H0 H1 H2 H3; apply permutation_trans with (1 := H1); auto.
 Qed.

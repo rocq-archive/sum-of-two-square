@@ -3,9 +3,7 @@ sum of two square numbers if and only if each prime factor $p$ of $n$
 that is equal to 3 modulo 4 has its exponent in the decomposition of n
 that is even.
  
-A note on the development is available at
-
-ftp://ftp-sop.inria.fr/lemme/Laurent.Thery/SumOfTwoSquare/Note.pdf
+A note on the development is available at [here](https://inria.hal.science/hal-05025371)
 
 
 To build the directory, type

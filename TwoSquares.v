@@ -16,6 +16,8 @@
 
 Require Export Wilson.
 Require Export ZdivExp.
+Require Import Iterator.
+
 Open Scope Z_scope.
  
 Definition sum_of_two_squares :=
@@ -47,25 +49,22 @@ apply Zis_mod_ref.
 red.
 replace ((1 * 1) * (a * a) - b * (b * - 1)) with ((a * a + b * b) - 0);
  auto with zarith.
-ring.
 Qed.
  
 Theorem two_squares_interval:
- forall p a b, prime p -> p = a * a + b * b ->  ( 0 < Zabs a < p ).
+ forall p a b, prime p -> p = a * a + b * b ->  ( 0 < Z.abs a < p ).
 intros p a b Hp; rewrite (Zabs_square a); rewrite (Zabs_square b); intros Hp1.
 assert (Hp2: 1 < p).
 generalize (prime_le_2 p Hp); auto with zarith.
-case (Zle_lt_or_eq 0 (Zabs a)); auto with zarith; intros Hza1.
-assert (Ha1: 0 < Zabs a * Zabs a).
-replace 0 with (0 * Zabs a); auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
-case (Zle_lt_or_eq 0 (Zabs b)); auto with zarith; intros Hza2.
-assert (Ha2: 0 < Zabs b * Zabs b).
-replace 0 with (0 * Zabs b); auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
+case (Zle_lt_or_eq 0 (Z.abs a)); auto with zarith; intros Hza1.
+assert (Ha1: 0 < Z.abs a * Z.abs a).
+replace 0 with (0 * Z.abs a); auto with zarith.
+case (Zle_lt_or_eq 0 (Z.abs b)); auto with zarith; intros Hza2.
+assert (Ha2: 0 < Z.abs b * Z.abs b).
+replace 0 with (0 * Z.abs b); auto with zarith.
 split; auto.
-replace (Zabs a) with (1 * Zabs a + 0 * 0); auto with zarith.
-apply Zle_lt_trans with (Zabs a * Zabs a + 0 * 0); auto with zarith.
+replace (Z.abs a) with (1 * Z.abs a + 0 * 0); auto with zarith.
+apply Z.le_lt_trans with (Z.abs a * Z.abs a + 0 * 0); auto with zarith.
 contradict Hp; rewrite Hp1; rewrite <- Hza2; simpl.
 rewrite Zplus_0_r; apply square_not_prime.
 contradict Hp; rewrite Hp1; rewrite <- Hza1; simpl.
@@ -73,14 +72,13 @@ apply square_not_prime.
 Qed.
  
 Theorem two_squares_sqrt_interval:
- forall p a b, prime p -> p = a * a + b * b ->  ( 0 < Zabs a <= Z.sqrt p ).
+ forall p a b, prime p -> p = a * a + b * b ->  ( 0 < Z.abs a <= Z.sqrt p ).
 intros p a b Hp Hp1; split.
 case two_squares_interval with ( 2 := Hp1 ); auto.
-rewrite <- (Zsqrt_square_id (Zabs a)); auto with zarith.
+rewrite <- (Zsqrt_square_id (Z.abs a)); auto with zarith.
 apply Zsqrt_le; auto.
 split; auto with zarith.
 rewrite Hp1; rewrite (Zabs_square a); rewrite (Zabs_square b); auto with zarith.
-apply Zle_trans with (Zabs a * Zabs a + 0 * Zabs b); auto with zarith.
 Qed.
  
 Theorem two_squares_exists_mod_cor:
@@ -90,11 +88,11 @@ intros p Hp [a [b Hp1]]; rewrite (Zabs_square a) in Hp1;
  rewrite (Zabs_square b) in Hp1.
 assert (Hp2: 1 < p).
 generalize (prime_le_2 p Hp); auto with zarith.
-apply (two_squares_exists_mod p (Zabs b) (Zabs a)); auto with zarith.
-intros Hu; absurd (Zabs a * Zabs a = 0); auto with zarith.
+apply (two_squares_exists_mod p (Z.abs b) (Z.abs a)); auto with zarith.
+intros Hu; absurd (Z.abs a * Z.abs a = 0); auto with zarith.
 intros Hp3; contradict Hp; rewrite Hp1; rewrite Hp3; simpl;
  apply square_not_prime.
-rewrite <- (Zmod_def_small (Zabs a * Zabs a) p); auto with zarith.
+rewrite <- (Zmod_def_small (Z.abs a * Z.abs a) p); auto with zarith.
 rewrite <- (Zmod_def_small 0 p); auto with zarith.
 apply Zis_mod_def_inv; auto with zarith.
 case (two_squares_interval p a b); auto with zarith.
@@ -102,19 +100,14 @@ rewrite Hp1; (repeat rewrite <- Zabs_square); auto.
 intros H1 H2; split; auto with zarith.
 case (two_squares_interval p b a); auto with zarith.
 rewrite Hp1; (repeat rewrite <- Zabs_square); auto with zarith.
-intros H3 H4.
-apply Zle_lt_trans with (Zabs a * Zabs a + 0 * Zabs b); auto with zarith.
-rewrite Hp1; auto with zarith.
-apply Zplus_lt_compat_l; auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
-rewrite Hp1; exists 1; auto with zarith.
+exists 1; auto with zarith.
 Qed.
  
 Definition prod2 :=
    fun x1 y1 x2 y2 =>
    list_prod
-    (progression Zsucc x1 (Zabs_nat (y1 - x1)))
-    (progression Zsucc x2 (Zabs_nat (y2 - x2))).
+    (progression Z.succ x1 (Z.abs_nat (y1 - x1)))
+    (progression Z.succ x2 (Z.abs_nat (y2 - x2))).
  
 Theorem in_prod2_inv:
  forall x1 y1 x2 y2 x3 y3,
@@ -150,8 +143,8 @@ Theorem prod_Z_surjective:
 intros f x1 y1 x2 y2 x3 y3 H1 H2 H3 H4 H5.
 case
  (incl_length_repetition
-   _ Z_eq_dec (map (fun p => f (fst p) (snd p)) (prod2 x1 y1 x2 y2))
-   (progression Zsucc x3 (Zabs_nat (y3 - x3)))).
+   _ Z.eq_dec (map (fun p => f (fst p) (snd p)) (prod2 x1 y1 x2 y2))
+   (progression Z.succ x3 (Z.abs_nat (y3 - x3)))).
 intros a Ha.
 case in_map_inv with ( 1 := Ha ); intros a1; case a1; simpl; clear a1;
  intros a1 b1 [Ha1 Hb1].
@@ -217,15 +210,15 @@ assert (H4: 0 <= Z.sqrt p).
 apply Zsqrt_is_pos; auto with zarith.
 case
  (prod_Z_surjective
-   (fun x y => Zmod (x + i * y) p) 0 (Z.sqrt p + 1) 0 (Z.sqrt p + 1) 0
+   (fun x y => Z.modulo (x + i * y) p) 0 (Z.sqrt p + 1) 0 (Z.sqrt p + 1) 0
    p); auto with zarith.
 intros x y _ _; apply Z_mod_lt; auto with zarith.
 repeat rewrite Zminus_0_r.
 case (Z.sqrt_spec p); auto with zarith.
 intros x1 [x2 [y1 [y2 [[Ha1 Hb1] [[Ha2 Hb2] [Ha3 Ha4]]]]]].
-exists (Zabs (x1 - x2)); exists (Zabs (y2 - y1)).
+exists ( Z.abs (x1 - x2)); exists ( Z.abs (y2 - y1)).
 assert (Hc:
- Zis_mod (Zabs (x1 - x2) * Zabs (x1 - x2) + Zabs (y2 - y1) * Zabs (y2 - y1)) 0 p).
+ Zis_mod ( Z.abs (x1 - x2) * Z.abs (x1 - x2) + Z.abs (y2 - y1) * Z.abs (y2 - y1)) 0 p).
 repeat rewrite <- Zabs_square.
 apply Zis_mod_trans
      with ((x1 - x2) * (x1 - x2) - ((i * i) * (y2 - y1)) * (y2 - y1)).
@@ -249,27 +242,18 @@ apply Zis_mod_sym; apply Zis_mod_minus_0.
 apply Zis_mod_def; auto with zarith.
 apply Zis_mod_mult; auto.
 assert (Hc1:
-  0 <= Zabs (x1 - x2) * Zabs (x1 - x2) + Zabs (y2 - y1) * Zabs (y2 - y1) < 2 * p
+  0 <= Z.abs (x1 - x2) * Z.abs (x1 - x2) + Z.abs (y2 - y1) * Z.abs (y2 - y1) < 2 * p
  ).
 split; auto with zarith.
 replace (2 * p) with (p + p); auto with zarith.
 apply Zplus_lt_compat; auto with zarith.
-apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
-assert (Hc1: Zabs (x1 - x2) <= Z.sqrt p); auto with zarith.
-case (Zle_or_lt x1 x2); intros Hc1.
-apply Zle_trans with x2; auto with zarith.
-rewrite Zabs_non_eq; auto with zarith.
-apply Zle_trans with x1; auto with zarith.
-rewrite Zabs_eq; auto with zarith.
+apply Z.le_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
+assert (Hc1: Z.abs (x1 - x2) <= Z.sqrt p); auto with zarith.
 apply Zmult_le_compat; auto with zarith.
 case (Z.sqrt_spec p); auto with zarith.
 intros Hc1 Hc2; case Zle_lt_or_eq with ( 1 := Hc1 ); auto.
 intros Hc3; contradict H1; rewrite <- Hc3; apply square_not_prime.
-apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
-assert (Hc1: Zabs (y2 - y1) <= Z.sqrt p); auto with zarith.
-case (Zle_or_lt y2 y1); intros Hc1.
-rewrite Zabs_non_eq; auto with zarith.
-rewrite Zabs_eq; auto with zarith.
+apply Z.le_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
 apply Zmult_le_compat; auto with zarith.
 case (Z.sqrt_spec p); auto with zarith.
 intros Hc1 Hc2; case Zle_lt_or_eq with ( 1 := Hc1 ); auto.
@@ -282,27 +266,24 @@ rewrite Zminus_0_r; intros q Hq; rewrite Hq; rewrite Hq in Hc1;
 assert (Hc3:  0 < q < 2 ).
 split; intros; apply Zmult_gt_0_lt_reg_r with p; auto with zarith.
 case (Zle_lt_or_eq 1 q); auto with zarith.
-intros Hc4; rewrite <- Hc4; auto with zarith.
-absurd (0 < Zabs (x1 - x2) * Zabs (x1 - x2) + Zabs (y2 - y1) * Zabs (y2 - y1)).
+absurd (0 < Z.abs (x1 - x2) * Z.abs (x1 - x2) + Z.abs (y2 - y1) * Z.abs (y2 - y1)).
 rewrite <- Hc1; auto with zarith.
-replace 0 with (0 * Zabs (x1 - x2) + 0 * Zabs (y2 - y1)); auto with zarith.
-cut (x1 = x2 \/ 0 < Zabs (x1 - x2)).
+replace 0 with (0 * Z.abs (x1 - x2) + 0 * Z.abs (y2 - y1)); auto with zarith.
+cut (x1 = x2 \/ 0 < Z.abs (x1 - x2)).
 intros [Hc3|Hc3].
-cut (y1 = y2 \/ 0 < Zabs (y2 - y1)).
+cut (y1 = y2 \/ 0 < Z.abs (y2 - y1)).
 intros [Hc4|Hc4].
 case Ha3; apply f_equal2 with ( f := @pair Z Z ); auto.
 apply Zplus_le_lt_compat; auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
 case (Zle_or_lt y1 y2); intros He.
 case Zle_lt_or_eq with ( 1 := He ); intros He1; auto.
-rewrite Zabs_eq; auto with zarith.
 rewrite Zabs_non_eq; auto with zarith.
-apply Zplus_lt_le_compat; auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
+rewrite Z.abs_eq; auto with zarith.
+apply Z.add_lt_le_mono; auto with zarith.
 case (Zle_or_lt x1 x2); intros Hd.
 case Zle_lt_or_eq with ( 1 := Hd ); intros Hd1; auto.
 rewrite Zabs_non_eq; auto with zarith.
-rewrite Zabs_eq; auto with zarith.
+rewrite Z.abs_eq; auto with zarith.
 Qed.
  
 Theorem two_squares_unique:
@@ -332,13 +313,13 @@ case Zle_lt_or_eq with ( 1 := H4 ); clear H4; intros H4.
 case Zle_lt_or_eq with ( 1 := H5 ); clear H5; intros H5.
 2:contradict H1; rewrite H7; replace (c * c + d * d) with (c * c);
    rewrite <- H5 || apply square_not_prime; auto with zarith.
-case (two_squares_sqrt_interval p a b); auto with zarith; rewrite Zabs_eq;
+case (two_squares_sqrt_interval p a b); auto with zarith; rewrite Z.abs_eq;
  auto with zarith; intros Hc1 Hc2.
-case (two_squares_sqrt_interval p b a); auto with zarith; rewrite Zabs_eq;
+case (two_squares_sqrt_interval p b a); auto with zarith; rewrite Z.abs_eq;
  auto with zarith; intros Hc3 Hc4.
-case (two_squares_sqrt_interval p c d); auto with zarith; rewrite Zabs_eq;
+case (two_squares_sqrt_interval p c d); auto with zarith; rewrite Z.abs_eq;
  auto with zarith; intros Hc5 Hc6.
-case (two_squares_sqrt_interval p d c); auto with zarith; rewrite Zabs_eq;
+case (two_squares_sqrt_interval p d c); auto with zarith; rewrite Z.abs_eq;
  auto with zarith; intros Hc7 Hc8.
 case (prime_mult p H1 (a * d - b * c) (a * d + b * c)); (try intros Ha1).
 exists (d * d - b * b).
@@ -346,18 +327,14 @@ apply trans_equal with (d * (d * p) - b * (b * p)); (try (ring; fail)).
 pattern p at 1; rewrite H6; rewrite H7; ring.
 left; assert (Hb1:  - p < a * d - b * c < p ).
 split.
-apply Zle_lt_trans with (0 * d - b * c); auto with zarith.
+apply Z.le_lt_trans with (0 * d - b * c); auto with zarith.
 replace (0 * d - b * c) with (- (b * c)); auto with zarith.
 cut (b * c <= p); auto with zarith.
-apply Zle_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
+apply Z.le_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
 apply Zmult_le_compat; auto with zarith.
-unfold Zminus; apply Zplus_lt_compat_r; auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
-apply Zle_lt_trans with (a * d - 0 * c); auto with zarith.
-unfold Zminus; apply Zplus_le_compat; auto with zarith.
-cut (0 * c <= b * c); auto with zarith.
-replace (a * d - 0 * c) with (a * d); auto with zarith.
-apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
+apply Z.le_lt_trans with (a * d - 0 * c); auto with zarith.
+rewrite Zminus_0_r.
+apply Z.le_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
 apply Zmult_le_compat; auto with zarith.
 case Ha1; clear Ha1; intros q Ha1.
 assert (Hb2: q = 0).
@@ -367,28 +344,28 @@ case (Zle_lt_or_eq 0 q); auto with zarith.
 assert (Hb3: a * d = b * c).
 apply Zminus_eq; rewrite Ha1; rewrite Hb2; auto with zarith.
 clear q Ha1 Hb1 Hb2.
-assert (Hb1: Zdivide a c).
+assert (Hb1: Z.divide a c).
 apply Gauss with b; auto with zarith.
 exists d; auto.
 rewrite (Zmult_comm d); auto with zarith.
 red.
-assert (Zdivide (Zgcd a b) p).
+assert (Z.divide (Z.gcd a b) p).
 rewrite H6; apply Zdivide_plus_r; auto with zarith.
 apply Zdivide_trans with a; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
 apply Zdivide_trans with b; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
-case (Zle_lt_or_eq 0 (Zgcd a b)); auto with zarith.
+case (Zle_lt_or_eq 0 (Z.gcd a b)); auto with zarith.
 generalize (Zgcd_is_pos a b); auto with zarith.
-intros HH1; case (Zle_lt_or_eq 1 (Zgcd a b)); auto with zarith.
+intros HH1; case (Zle_lt_or_eq 1 (Z.gcd a b)); auto with zarith.
 intros HH2; contradict H; apply prime_inv_def; auto with zarith.
 split; auto.
-apply Zle_lt_trans with a; auto with zarith.
+apply Z.le_lt_trans with a; auto with zarith.
 apply Zdivide_le; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
-apply Zle_lt_trans with ( 1 := Hc2 ).
-apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
-apply Zle_trans with (1 * Z.sqrt p); auto with zarith.
+apply Z.le_lt_trans with ( 1 := Hc2 ).
+apply Z.le_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
+apply Z.le_trans with (1 * Z.sqrt p); auto with zarith.
 intros tmp; rewrite tmp; apply Zgcd_is_gcd.
 intros HH1.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
@@ -397,8 +374,6 @@ intros HH2; contradict H2; rewrite HH2; auto with zarith.
 case Hb1; clear Hb1; intros k Hb1.
 assert (Hb2: d = k * b).
 apply Zmult_reg_l with a; auto with zarith.
-apply trans_equal with ( 1 := Hb3 ).
-rewrite Hb1; ring.
 assert (Hb4: k * k = 1).
 apply Zmult_reg_l with p; auto with zarith.
 pattern p at 1; rewrite H6.
@@ -406,48 +381,45 @@ apply trans_equal with ((k * a) * (k * a) + (k * b) * (k * b)).
 ring.
 rewrite <- Hb1; rewrite <- Hb2; auto with zarith.
 rewrite Hb1; rewrite Hb2; replace k with 1; auto with zarith.
-case (Zmult_1_inversion_l k k); auto.
-intros tmp; contradict H4; rewrite Hb1; rewrite tmp; auto with zarith.
 right; assert (Hb1: a * c = b * d).
 case Ha1; clear Ha1; intros q Ha1.
 assert (Hb2: q = 1).
 assert (Hb3:  0 < q < 2 ).
 split; intros; apply Zmult_gt_0_lt_reg_r with p; auto with zarith.
 rewrite <- Ha1; auto with zarith.
-replace (0 * p) with (0 * d + 0 * c); auto with zarith.
-apply Zplus_lt_compat; apply Zmult_lt_compat_r; auto with zarith.
 replace (2 * p) with (p + p); auto with zarith.
-rewrite <- Ha1; apply Zplus_lt_compat;
- apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
-apply Zle_trans with (Z.sqrt p * d); auto with zarith.
-apply Zle_trans with (Z.sqrt p * c); auto with zarith.
-case (Zle_lt_or_eq 1 q); auto with zarith.
+apply Z.add_lt_mono; auto with zarith.
+apply Z.le_lt_trans with (2 := Hs); auto with zarith.
+apply Zmult_le_compat; auto with zarith.
+apply Z.le_lt_trans with (2 := Hs); auto with zarith.
+apply Zmult_le_compat; auto with zarith.
+auto with zarith.
 rewrite Hb2 in Ha1; rewrite Zmult_1_l in Ha1.
 apply Zminus_eq; case ((fun x => Zmult_integral x x) (a * c - b * d)); auto.
 apply Zplus_reg_l with (p * p); auto with zarith.
 pattern p at 1 2; rewrite <- Ha1; pattern p at 1; rewrite H7; rewrite H6; ring.
-assert (Hb2: Zdivide a d).
+assert (Hb2: Z.divide a d).
 apply Gauss with b; auto with zarith.
 exists c; auto.
 rewrite (Zmult_comm c); auto with zarith.
 red.
-assert (Zdivide (Zgcd a b) p).
+assert (Z.divide (Z.gcd a b) p).
 rewrite H6; apply Zdivide_plus_r; auto with zarith.
 apply Zdivide_trans with a; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
 apply Zdivide_trans with b; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
-case (Zle_lt_or_eq 0 (Zgcd a b)); auto with zarith.
+case (Zle_lt_or_eq 0 (Z.gcd a b)); auto with zarith.
 generalize (Zgcd_is_pos a b); auto with zarith.
-intros HH1; case (Zle_lt_or_eq 1 (Zgcd a b)); auto with zarith.
+intros HH1; case (Zle_lt_or_eq 1 (Z.gcd a b)); auto with zarith.
 intros HH2; contradict H; apply prime_inv_def; auto with zarith.
 split; auto.
-apply Zle_lt_trans with a; auto with zarith.
+apply Z.le_lt_trans with a; auto with zarith.
 apply Zdivide_le; auto with zarith.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
-apply Zle_lt_trans with ( 1 := Hc2 ).
-apply Zle_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
-apply Zle_trans with (1 * Z.sqrt p); auto with zarith.
+apply Z.le_lt_trans with ( 1 := Hc2 ).
+apply Z.le_lt_trans with (Z.sqrt p * Z.sqrt p); auto with zarith.
+apply Z.le_trans with (1 * Z.sqrt p); auto with zarith.
 intros tmp; rewrite tmp; apply Zgcd_is_gcd.
 intros HH1.
 generalize (Zgcd_is_gcd a b); intros tmp; inversion tmp; auto.
@@ -456,8 +428,6 @@ intros HH2; contradict H2; rewrite HH2; auto with zarith.
 case Hb2; clear Hb2; intros k Hb2.
 assert (Hb3: c = k * b).
 apply Zmult_reg_l with a; auto with zarith.
-apply trans_equal with ( 1 := Hb1 ).
-rewrite Hb2; ring.
 assert (Hb4: k * k = 1).
 apply Zmult_reg_l with p; auto with zarith.
 pattern p at 1; rewrite H6.
@@ -465,8 +435,6 @@ apply trans_equal with ((k * a) * (k * a) + (k * b) * (k * b)).
 ring.
 rewrite <- Hb2; rewrite <- Hb3; auto with zarith.
 rewrite Hb3; rewrite Hb2; replace k with 1; auto with zarith.
-case (Zmult_1_inversion_l k k); auto.
-intros tmp; contradict H4; rewrite Hb3; rewrite tmp; auto with zarith.
 Qed.
  
 Theorem two_square_mod_exists_2: Zis_mod (1 * 1) (- 1) 2.
@@ -477,7 +445,7 @@ Theorem two_square_mod_exists_1_mod4:
  forall p,
  prime p ->
  Zis_mod p 1 4 ->
-  Zis_mod (Zfact (Zdiv (p - 1) 2) * Zfact (Zdiv (p - 1) 2)) (- 1) p.
+  Zis_mod (Zfact (Z.div (p - 1) 2) * Zfact (Z.div (p - 1) 2)) (- 1) p.
 intros p Hp Hp1.
 case Hp1; clear Hp1; intros q Hp1.
 replace ((p - 1) / 2) with (2 * q).
@@ -490,17 +458,17 @@ case (Zle_lt_or_eq 0 q); auto with zarith.
 apply Zis_mod_trans with ( 2 := wilson p Hp ).
 rewrite Hp1.
 assert (Hp4: 1 < 2 * q).
-apply Zle_lt_trans with (1 * q); auto with zarith.
+apply Z.le_lt_trans with (1 * q); auto with zarith.
 unfold Zfact; rewrite (Zprod_split_up 1 (2 * q) (q * 4)); auto with zarith.
 replace (Zprod (2 * q + 1) (q * 4) (fun (x : Z) => x))
      with (Zprod 1 (2 * q) (fun (x : Z) => 2 * q + x)).
 apply Zis_mod_def; auto with zarith.
 (repeat rewrite (fun x y z => Zmod_mult (Zprod x y z))); auto with zarith.
-apply f_equal2 with ( f := Zmod ); auto.
+apply f_equal2 with ( f := Z.modulo ); auto.
 apply f_equal2 with ( f := Zmult ); auto.
 apply trans_equal
      with (Zprod 1 (2 * q) (fun (x : Z) => - 1 * ((2 * q + 1) - x)) mod p).
-apply f_equal2 with ( f := Zmod ); auto.
+apply f_equal2 with ( f := Z.modulo ); auto.
 rewrite <- (Zprod_mult 1 (2 * q) (fun x => - 1) (fun x => (2 * q + 1) - x)).
 rewrite (Zprod_c (- 1)); auto with zarith.
 replace (Zpower (- 1) ((1 + 2 * q) - 1)) with 1.
@@ -510,16 +478,16 @@ rewrite <- (iter_map
              _ _ _ 1 (fun (x : Z) => x) Zmult (fun (x : Z) => (2 * q + 1) - x)).
 apply iter_permutation; auto with zarith.
 apply permutation_trans
-     with (rev (progression Zsucc 1 (Zabs_nat ((1 + 2 * q) - 1)))).
+     with (rev (progression Z.succ 1 (Z.abs_nat ((1 + 2 * q) - 1)))).
 apply permutation_sym; apply permutation_rev.
 rewrite Zprogression_opp; auto.
 replace ((1 + 2 * q) - 1) with (2 * q); auto with zarith.
-replace (1 + Z_of_nat (pred (Zabs_nat (2 * q)))) with (2 * q); auto with zarith.
+replace (1 + Z_of_nat (pred (Z.abs_nat (2 * q)))) with (2 * q); auto with zarith.
 pattern (2 * q) at 1 3; rewrite <- (Z_of_nat_Zabs_nat (2 * q)).
-cut (exists c , c = Zabs_nat (2 * q) ).
-intros [c Hc]; pattern (Zabs_nat (2 * q)) at 1 3; rewrite <- Hc.
-cut (le (Zabs_nat (2 * q)) c).
-generalize c; elim (Zabs_nat (2 * q)); auto; clear c Hc.
+cut (exists c , c = Z.abs_nat (2 * q) ).
+intros [c Hc]; pattern (Z.abs_nat (2 * q)) at 1 3; rewrite <- Hc.
+cut (le (Z.abs_nat (2 * q)) c).
+generalize c; elim (Z.abs_nat (2 * q)); auto; clear c Hc.
 intros n Rec c Hc.
 repeat rewrite Zprogression_end.
 rewrite map_app.
@@ -528,34 +496,30 @@ apply permutation_app_comp; auto with zarith.
 replace (Z_of_nat c - Z_of_nat n) with ((Z_of_nat c + 1) - (1 + Z_of_nat n));
  apply permutation_refl || ring.
 rewrite Hc; auto with arith.
-exists (Zabs_nat (2 * q)); auto.
+exists (Z.abs_nat (2 * q)); auto.
 auto with zarith.
-pattern (2 * q) at 2; replace (2 * q) with (Zsucc (Zpred (2 * q)));
- auto with zarith.
-rewrite Zabs_nat_Zsucc; auto with zarith.
-rewrite <- pred_Sn; rewrite Z_of_nat_Zabs_nat; auto with zarith.
 replace ((1 + 2 * q) - 1) with (2 * q); auto with zarith.
 replace (2 * q) with (q + q); auto with zarith.
 rewrite Zpower_exp; auto with zarith.
 rewrite Zabs_square; rewrite Zpower_Zabs; auto with zarith.
-replace (Zabs (- 1)) with 1; (repeat rewrite Zpower_1); auto with zarith.
+replace ( Z.abs (- 1)) with 1; (repeat rewrite Zpower_1); auto with zarith.
 unfold Zprod; (rewrite Zle_imp_le_bool; auto with zarith).
-elim (Zabs_nat ((1 + 2 * q) - 1)); auto.
+elim (Z.abs_nat ((1 + 2 * q) - 1)); auto.
 intros n Rec.
 (repeat rewrite Zprogression_end); auto with zarith.
 (repeat rewrite iter_app); auto with zarith.
 rewrite (Zmod_mult
           (iter
             1 (fun (x : Z) => - 1 * ((2 * q + 1) - x)) Zmult
-            (progression Zsucc 1 n))); auto with zarith.
+            (progression Z.succ 1 n))); auto with zarith.
 rewrite (Zmod_mult
-          (iter 1 (fun (x : Z) => 2 * q + x) Zmult (progression Zsucc 1 n)));
+          (iter 1 (fun (x : Z) => 2 * q + x) Zmult (progression Z.succ 1 n)));
  auto with zarith.
-apply f_equal2 with ( f := Zmod ); auto.
+apply f_equal2 with ( f := Z.modulo ); auto.
 apply f_equal2 with ( f := Zmult ); auto.
 change
- (Zmod ((- 1 * ((2 * q + 1) - (1 + Z_of_nat n))) * 1) p =
-  Zmod ((2 * q + (1 + Z_of_nat n)) * 1) p).
+ (Z.modulo ((- 1 * ((2 * q + 1) - (1 + Z_of_nat n))) * 1) p =
+  Z.modulo ((2 * q + (1 + Z_of_nat n)) * 1) p).
 apply Zis_mod_def_inv; auto with zarith.
 exists (- 1); replace p with (q * 4 + 1); [idtac | rewrite <- Hp1]; ring.
 replace (q * 4) with (2 * q + 2 * q); (try ring).
@@ -565,7 +529,7 @@ rewrite <- (iter_map _ _ _ 1 (fun (x : Z) => x) Zmult (fun (x : Z) => 2 * q + x)
 apply f_equal4 with ( f := @iter Z Z ); auto.
 replace ((1 + 2 * q) - 1) with (2 * q); auto with zarith.
 replace ((1 + (2 * q + 2 * q)) - (2 * q + 1)) with (2 * q); auto with zarith.
-elim (Zabs_nat (2 * q)); auto with zarith.
+elim (Z.abs_nat (2 * q)); auto with zarith.
 intros n Rec.
 (repeat rewrite Zprogression_end); auto with zarith.
 (repeat rewrite map_app); auto with zarith.
@@ -587,22 +551,22 @@ rewrite H2; right; right; apply Zis_mod_mod; auto with zarith.
 left; case (Zle_lt_or_eq 2 p); auto with zarith.
 inversion Hp; auto with zarith.
 intros H4; case (prime_inv_def p 2); auto with zarith.
-rewrite (Z_div_mod_eq p 4); auto with zarith.
+rewrite (Z_div_mod_eq_full p 4); auto with zarith.
 rewrite <- H2; exists (2 * (p / 4) + 1); ring.
 rewrite H2; right; left; apply Zis_mod_mod; auto with zarith.
-absurd (Zdivide 4 p).
+absurd (Z.divide 4 p).
 intros [q Hq].
 case (Zle_lt_or_eq 0 q); auto with zarith.
 apply Zmult_le_reg_r with 4; auto with zarith.
 rewrite <- Hq; inversion Hp; auto with zarith.
-intros H4; absurd (Zdivide 2 p).
+intros H4; absurd (Z.divide 2 p).
 apply prime_inv_def; auto with zarith.
 exists (2 * q); rewrite Hq; auto with zarith.
 intros H4; contradict Hp; rewrite Hq; rewrite <- H4.
 rewrite Zmult_0_l.
 apply not_prime_0.
-exists (Zdiv p 4).
-pattern p at 1; rewrite (Z_div_mod_eq p 4); auto with zarith.
+exists (Z.div p 4).
+pattern p at 1; rewrite (Z_div_mod_eq_full p 4); auto with zarith.
 Qed.
  
 Theorem two_squares_mod_inv:
@@ -611,7 +575,7 @@ intros p i Hp H1.
 generalize (prime_case_4 p Hp); intros [H2|[H2|H2]]; auto.
 case two_squares_mod_exists_sum with ( 2 := H1 ); auto with zarith.
 intros a [b Hab].
-absurd (Zmod p 4 = Zmod 3 4).
+absurd (Z.modulo p 4 = Z.modulo 3 4).
 rewrite Hab.
 rewrite Zmod_plus_eq; auto with zarith.
 rewrite (Zmod_mult a); (try rewrite (Zmod_mult b)); auto with zarith.
@@ -643,7 +607,7 @@ Theorem two_squares_exists:
 intros p Hp [H1|H1].
 apply two_squares_mod_exists_sum with 1; auto.
 subst p; apply two_square_mod_exists_2; auto.
-apply two_squares_mod_exists_sum with (Zfact (Zdiv (p - 1) 2)); auto.
+apply two_squares_mod_exists_sum with (Zfact (Z.div (p - 1) 2)); auto.
 apply two_square_mod_exists_1_mod4; auto.
 Qed.
  
@@ -658,7 +622,7 @@ Qed.
 Theorem not_prime_prime_divide:
  forall n,
  (1 < n)%Z ->
- ~ prime n ->  (exists p , ( 1 < p < n )%Z /\ (prime p /\ Zdivide p n) ).
+ ~ prime n ->  (exists p , ( 1 < p < n )%Z /\ (prime p /\ Z.divide p n) ).
 intros n Hn; generalize Hn; pattern n; apply Zlt_0_ind; auto with zarith;
  clear n Hn.
 intros n Rec _ H1 H2.
@@ -673,16 +637,16 @@ Qed.
  
 Theorem prime_mod_3_4_divide_divide_first:
  forall p a b,
- prime p -> Zis_mod p 3 4 -> Zdivide p (a * a + b * b) ->  Zdivide p a.
+ prime p -> Zis_mod p 3 4 -> Z.divide p (a * a + b * b) ->  Z.divide p a.
 intros p a b H1 H2 H3.
 assert (Hp: 1 < p).
 inversion H1; auto.
-case (Z_eq_dec 0 (Zmod a p)); intros H4.
-exists (Zdiv a p).
+case (Z.eq_dec 0 (Z.modulo a p)); intros H4.
+exists (Z.div a p).
 rewrite Zmult_comm; apply Z_div_exact_2; auto with zarith.
 case (two_squares_exists_mod p b a); auto with zarith.
 contradict H4.
-apply sym_equal; replace 0 with (Zmod 0 p); auto with zarith.
+apply sym_equal; replace 0 with ( Z.modulo 0 p); auto with zarith.
 apply Zis_mod_def_inv; auto with zarith.
 case (Zdivide_dec p a); intros Hd.
 case Hd; intros q Hq; exists q; rewrite <- Hq; auto with zarith.
@@ -692,10 +656,10 @@ rewrite Zmult_0_r; auto.
 case H3; intros q Hq; exists q; rewrite <- Hq; auto with zarith.
 intros i Hi.
 case two_squares_mod_inv with ( 2 := Hi ); auto; intros He.
-absurd (Zmod p 4 = Zmod 3 4); auto with zarith.
+absurd (Z.modulo p 4 = Z.modulo 3 4); auto with zarith.
 rewrite He; intros; discriminate.
 apply Zis_mod_def_inv; auto with zarith.
-absurd (Zmod 1 4 = Zmod 3 4); auto with zarith.
+absurd (Z.modulo 1 4 = Z.modulo 3 4); auto with zarith.
 intros; discriminate.
 apply Zis_mod_def_inv; auto with zarith.
 apply Zis_mod_trans with ( 2 := H2 ); auto.
@@ -705,16 +669,16 @@ Qed.
 Theorem prime_mod_3_4_divide_divide_square:
  forall p a b,
  prime p ->
- Zis_mod p 3 4 -> Zdivide p (a * a + b * b) ->  Zdivide (p * p) (a * a + b * b).
+ Zis_mod p 3 4 -> Z.divide p (a * a + b * b) ->  Z.divide (p * p) (a * a + b * b).
 intros p a b H1 H2 H3.
 assert (Hp: 1 < p).
 inversion H1; auto.
-assert (Ha: Zdivide p a).
+assert (Ha: Z.divide p a).
 apply prime_mod_3_4_divide_divide_first with ( b := b ); auto with zarith.
-assert (Hb: Zdivide p b).
+assert (Hb: Z.divide p b).
 apply prime_mod_3_4_divide_divide_first with ( b := a ); auto with zarith.
 replace (b * b + a * a) with (a * a + b * b); auto with zarith.
-exists (Zdiv a p * Zdiv a p + Zdiv b p * Zdiv b p).
+exists (Z.div a p * Z.div a p + Z.div b p * Z.div b p).
 pattern a at 1 2; rewrite (Zdivide_Zdiv_eq p a); auto with zarith.
 pattern b at 1 2; rewrite (Zdivide_Zdiv_eq p b); auto with zarith; ring.
 Qed.
@@ -739,10 +703,10 @@ absurd (Zeven (Zdiv_exp n n)); auto.
 rewrite Zdiv_exp_id; auto with zarith.
 case not_prime_prime_divide with ( 2 := H3 ); auto.
 intros p [Hp1 [Hp2 Hp3]].
-assert (n = p * Zdiv n p).
+assert (n = p * Z.div n p).
 apply Zdivide_Zdiv_eq; auto with zarith.
 assert (Hpp: 1 < p * p).
-apply Zlt_le_trans with (1 * p); auto with zarith.
+apply Z.lt_le_trans with (1 * p); auto with zarith.
 generalize (prime_case_4 _ Hp2); intros [H4|[H4|H4]].
 subst p; rewrite H; apply two_squares_comp; auto with zarith.
 apply two_squares_exists; auto with zarith.
@@ -750,7 +714,7 @@ apply Rec; auto with zarith.
 intros p1 Hm1 Hm2.
 rewrite <- Zdiv_exp_prime with ( c := 2 ); auto with zarith.
 rewrite Zmult_comm; rewrite <- H; auto with zarith.
-intros Hm3; absurd (Zmod p1 4 = Zmod 3 4); auto with zarith.
+intros Hm3; absurd ( Z.modulo p1 4 = Z.modulo 3 4); auto with zarith.
 rewrite (prime_divide_prime_eq p1 2); auto with zarith.
 intros; discriminate.
 apply Zis_mod_def_inv; auto with zarith.
@@ -762,15 +726,13 @@ case (Zdivide_Zdiv_lt_pos p n); auto with zarith.
 intros p1 Hm1 Hm2.
 rewrite <- Zdiv_exp_prime with ( c := p ); auto with zarith.
 rewrite Zmult_comm; rewrite <- H; auto with zarith.
-apply Zmult_lt_reg_r with p; auto with zarith.
-rewrite (Zmult_comm (Zdiv n p)); rewrite <- H; auto with zarith.
-intros Hm3; absurd (Zmod 1 4 = Zmod 3 4); auto with zarith.
+intros Hm3; absurd ( Z.modulo 1 4 = Z.modulo 3 4); auto with zarith.
 intros; discriminate.
-apply trans_equal with (Zmod p1 4).
+apply trans_equal with ( Z.modulo p1 4).
 rewrite (prime_divide_prime_eq p1 p); auto with zarith.
 apply sym_equal; apply Zis_mod_def_inv; auto with zarith.
 apply Zis_mod_def_inv; auto with zarith.
-assert (HH: Zdivide (p * p) n).
+assert (HH: Z.divide (p * p) n).
 apply Zdivide_trans with (Zpower p (Zdiv_exp p n)); auto.
 replace (p * p) with (Zpower p 2); auto with zarith.
 exists (Zpower p (Zdiv_exp p n - 2)).
@@ -784,14 +746,11 @@ rewrite <- tmp1; intros; intros tmp2; case tmp2.
 intros tmp; case (Zdiv_exp_not_div p n); auto with zarith.
 rewrite <- tmp; auto with zarith.
 replace (p ^ (1 + 0)) with p; auto with zarith.
-rewrite Zpower_exp_1; auto with zarith.
-replace 2 with (1 + 1); auto with zarith.
-(repeat (rewrite Zpower_exp || rewrite Zpower_exp_1)); auto with zarith.
 apply Zdiv_exp_div; auto with arith.
 case Hp1; auto.
-apply Zle_trans with p; auto with zarith.
-assert (H0: n = (p * p) * Zdiv n (p * p)).
-pattern n at 1; rewrite (Z_div_mod_eq n (p * p)); auto with zarith.
+apply Z.le_trans with p; auto with zarith.
+assert (H0 : n = (p * p) * Z.div n (p * p)).
+pattern n at 1; rewrite (Z_div_mod_eq_full n (p * p)); auto with zarith.
 rewrite (Zdivide_mod n (p * p)); auto with zarith.
 case (Zle_lt_or_eq 1 (n / (p * p))).
 case (Zdivide_Zdiv_lt_pos (p * p) n); auto with zarith.
@@ -802,19 +761,16 @@ case (Zdivide_Zdiv_lt_pos (p * p) n); auto with zarith.
 intros p1 Hm1 Hm2.
 case (Zdivide_dec p1 p); intros Hm3.
 rewrite (prime_divide_prime_eq p1 p); auto with zarith.
-replace (Zdiv_exp p (n / (p * p))) with (Zpred (Zpred (Zdiv_exp p n)));
+replace (Zdiv_exp p (n / (p * p))) with ( Z.pred ( Z.pred (Zdiv_exp p n)));
  auto with zarith.
 apply Zeven_pred; apply Zodd_pred; auto with zarith.
 pattern n at 1; rewrite H0.
 rewrite <- Zmult_assoc.
 rewrite Zdiv_exp_succ; auto with zarith.
 rewrite Zdiv_exp_succ; auto with zarith.
-apply Zlt_le_trans with (p * 1); auto with zarith.
 rewrite <- Zdiv_exp_prime with ( c := p ); auto with zarith.
 rewrite <- Zdiv_exp_prime with ( c := p ); auto with zarith.
 replace (((n / (p * p)) * p) * p) with n; auto with zarith.
-apply trans_equal with ( 1 := H0 ); ring.
-apply Zlt_le_trans with (1 * p); auto with zarith.
 intros HH1; rewrite H0; rewrite <- HH1; exists p; exists 0; ring.
 Qed.
  
@@ -832,77 +788,68 @@ case H2; intros a [b Ha1]; rewrite (Zabs_square a) in Ha1;
  rewrite (Zabs_square b) in Ha1; subst n.
 assert (Hp: 1 < p).
 inversion H3; auto.
-assert (Ha: Zdivide p (Zabs a)).
-apply prime_mod_3_4_divide_divide_first with ( b := Zabs b ); auto with zarith.
-assert (Hb: Zdivide p (Zabs b)).
-apply prime_mod_3_4_divide_divide_first with ( b := Zabs a ); auto with zarith.
-replace (Zabs b * Zabs b + Zabs a * Zabs a)
-     with (Zabs a * Zabs a + Zabs b * Zabs b); auto with zarith.
-assert (Ha1: 0 <= Zabs a / p).
-apply Zge_le; apply (Z_div_ge0 (Zabs a) p); intros; (try apply Zle_ge);
+assert (Ha: Z.divide p ( Z.abs a)).
+apply prime_mod_3_4_divide_divide_first with ( b := Z.abs b ); auto with zarith.
+assert (Hb: Z.divide p ( Z.abs b)).
+apply prime_mod_3_4_divide_divide_first with ( b := Z.abs a ); auto with zarith.
+replace ( Z.abs b * Z.abs b + Z.abs a * Z.abs a)
+     with ( Z.abs a * Z.abs a + Z.abs b * Z.abs b); auto with zarith.
+assert (Ha1: 0 <= Z.abs a / p).
+apply Z.ge_le; apply (Z_div_ge0 ( Z.abs a) p); intros; (try apply Zle_ge);
  auto with zarith.
-assert (Hb1: 0 <= Zabs b / p).
-apply Zge_le; apply (Z_div_ge0 (Zabs b) p); intros; (try apply Zle_ge);
+assert (Hb1: 0 <= Z.abs b / p).
+apply Z.ge_le; apply (Z_div_ge0 ( Z.abs b) p); intros; (try apply Zle_ge);
  auto with zarith.
-assert (Hu: 0 < (Zabs a / p) * (Zabs a / p) + (Zabs b / p) * (Zabs b / p)).
-case (Zle_lt_or_eq 0 (Zabs a)); auto with zarith; intros Hr1.
-case (Zdivide_Zdiv_lt_pos p (Zabs a)); auto with zarith; intros Hr2 Hr3.
-apply Zlt_le_trans with ((Zabs a / p) * (Zabs a / p) + 0 * (Zabs b / p));
- auto with zarith.
-rewrite Zmult_0_l; rewrite Zplus_0_r; replace 0 with (0 * (Zabs a / p));
- auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
+assert (Hu: 0 < ( Z.abs a / p) * ( Z.abs a / p) + ( Z.abs b / p) * ( Z.abs b / p)).
+case (Zle_lt_or_eq 0 ( Z.abs a)); auto with zarith; intros Hr1.
+case (Zdivide_Zdiv_lt_pos p ( Z.abs a)); auto with zarith; intros Hr2 Hr3.
 rewrite <- Hr1; rewrite Zmult_0_l; rewrite Zplus_0_l.
-case (Zle_lt_or_eq 0 (Zabs b)); auto with zarith; intros Hs1.
-case (Zdivide_Zdiv_lt_pos p (Zabs b)); auto with zarith; intros Hs2 Hs3.
-replace 0 with (0 * (Zabs b / p)); auto with zarith.
-apply Zmult_lt_compat_r; auto with zarith.
-contradict H1; rewrite <- Hs1; rewrite <- Hr1; auto with zarith.
-replace (Zdiv_exp p (Zabs a * Zabs a + Zabs b * Zabs b))
+case (Zle_lt_or_eq 0 ( Z.abs b)); auto with zarith; intros Hs1.
+case (Zdivide_Zdiv_lt_pos p ( Z.abs b)); auto with zarith; intros Hs2 Hs3.
+replace 0 with (0 * ( Z.abs b / p)); auto with zarith.
+replace (Zdiv_exp p ( Z.abs a * Z.abs a + Z.abs b * Z.abs b))
      with
-      (Zsucc
-        (Zsucc
+      (Z.succ
+        (Z.succ
           (Zdiv_exp
             p
-            (Zdiv (Zabs a) p * Zdiv (Zabs a) p +
-             Zdiv (Zabs b) p * Zdiv (Zabs b) p)))).
+            (Z.div ( Z.abs a) p * Z.div ( Z.abs a) p +
+             Z.div ( Z.abs b) p * Z.div ( Z.abs b) p)))).
 apply Zeven_Sn; apply Zodd_Sn; apply Rec; auto with zarith.
 split; auto with zarith.
-case (Zle_lt_or_eq 0 (Zabs a)); auto with zarith; intros Hr1.
-case (Zdivide_Zdiv_lt_pos p (Zabs a)); auto with zarith; intros Hr2 Hr3.
-case (Zle_lt_or_eq 0 (Zabs b)); auto with zarith; intros Hs1.
-case (Zdivide_Zdiv_lt_pos p (Zabs b)); auto with zarith; intros Hs2 Hs3.
+case (Zle_lt_or_eq 0 ( Z.abs a)); auto with zarith; intros Hr1.
+case (Zdivide_Zdiv_lt_pos p ( Z.abs a)); auto with zarith; intros Hr2 Hr3.
+case (Zle_lt_or_eq 0 ( Z.abs b)); auto with zarith; intros Hs1.
+case (Zdivide_Zdiv_lt_pos p ( Z.abs b)); auto with zarith; intros Hs2 Hs3.
 apply Zplus_lt_compat.
-apply Zlt_trans with (Zabs a * (Zabs a / p)); auto with zarith.
+apply Z.lt_trans with ( Z.abs a * ( Z.abs a / p)); auto with zarith.
 apply Zmult_lt_compat_r; auto with zarith.
 apply Zmult_lt_compat_l; auto with zarith.
-apply Zlt_trans with (Zabs b * (Zabs b / p)); auto with zarith.
+apply Z.lt_trans with ( Z.abs b * ( Z.abs b / p)); auto with zarith.
 apply Zmult_lt_compat_r; auto with zarith.
 apply Zmult_lt_compat_l; auto with zarith.
-rewrite <- Hs1; replace (Zdiv 0 p) with 0.
+rewrite <- Hs1; replace (Z.div 0 p) with 0.
 (repeat rewrite Zmult_0_r); (repeat rewrite Zplus_0_r).
-apply Zlt_trans with (Zabs a * (Zabs a / p)); auto with zarith.
+apply Z.lt_trans with ( Z.abs a * ( Z.abs a / p)); auto with zarith.
 apply Zmult_lt_compat_r; auto with zarith.
 apply Zmult_lt_compat_l; auto with zarith.
-unfold Zdiv; simpl; auto.
-rewrite <- Hr1; replace (Zdiv 0 p) with 0.
+unfold Z.div; simpl; auto.
+rewrite <- Hr1; replace (Z.div 0 p) with 0.
 (repeat rewrite Zmult_0_r); (repeat rewrite Zplus_0_l).
-case (Zle_lt_or_eq 0 (Zabs b)); auto with zarith; intros Hs1.
-case (Zdivide_Zdiv_lt_pos p (Zabs b)); auto with zarith; intros Hs2 Hs3.
-apply Zlt_trans with (Zabs b * (Zabs b / p)); auto with zarith.
+case (Zle_lt_or_eq 0 ( Z.abs b)); auto with zarith; intros Hs1.
+case (Zdivide_Zdiv_lt_pos p ( Z.abs b)); auto with zarith; intros Hs2 Hs3.
+apply Z.lt_trans with ( Z.abs b * ( Z.abs b / p)); auto with zarith.
 apply Zmult_lt_compat_r; auto with zarith.
 apply Zmult_lt_compat_l; auto with zarith.
-contradict H1; rewrite <- Hs1; rewrite <- Hr1; auto with zarith.
-unfold Zdiv; simpl; auto.
-exists (Zabs a / p); exists (Zabs b / p); auto.
-replace (Zabs a * Zabs a + Zabs b * Zabs b)
+unfold Z.div; simpl; auto.
+exists ( Z.abs a / p); exists ( Z.abs b / p); auto.
+replace ( Z.abs a * Z.abs a + Z.abs b * Z.abs b)
      with
-      (p * (p * ((Zabs a / p) * (Zabs a / p) + (Zabs b / p) * (Zabs b / p)))).
+      (p * (p * (( Z.abs a / p) * ( Z.abs a / p) + ( Z.abs b / p) * ( Z.abs b / p)))).
 (repeat rewrite Zdiv_exp_succ); auto with zarith.
-apply Zlt_le_trans with (p * 1); auto with zarith.
-pattern (Zabs a) at 3 4; rewrite (Zdivide_Zdiv_eq p (Zabs a)); auto with zarith.
-pattern (Zabs b) at 3 4; rewrite (Zdivide_Zdiv_eq p (Zabs b)); auto with zarith.
-ring.
+apply Z.lt_le_trans with (p * 1); auto with zarith.
+pattern ( Z.abs a) at 3 4; rewrite (Zdivide_Zdiv_eq p ( Z.abs a)); auto with zarith.
+pattern ( Z.abs b) at 3 4; rewrite (Zdivide_Zdiv_eq p ( Z.abs b)); auto with zarith.
 replace (Zdiv_exp p n) with 0; auto with zarith.
 apply Zdiv_exp_inv; auto with zarith.
 inversion H3; auto.
