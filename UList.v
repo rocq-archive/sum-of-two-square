@@ -36,7 +36,7 @@ Variable eqA_dec : forall (a b : A),  ({ a = b }) + ({ a <> b }).
 Inductive ulist : list A ->  Prop :=
   ulist_nil: ulist nil
  | ulist_cons: forall a l, ~ In a l -> ulist l ->  ulist (a :: l) .
-Hint Constructors ulist .
+Hint Constructors ulist : core.
 (* Inversion theorem *)
  
 Theorem ulist_inv: forall a l, ulist (a :: l) ->  ulist l.
@@ -153,12 +153,12 @@ case (ulist_incl_permutation l1 l2); auto.
 intros l3 H4.
 assert (H5: l3 = @nil A).
 generalize (permutation_length _ _ _ H4); rewrite length_app; rewrite H3.
-rewrite plus_comm; case l3; simpl; auto.
+rewrite Nat.add_comm; case l3; simpl; auto.
 intros a l H5; absurd (lt (length l2) (length l2)); auto with arith.
 pattern (length l2) at 2; rewrite H5; auto with arith.
 replace l1 with (app l1 l3); auto.
 apply permutation_sym; auto.
-rewrite H5; rewrite app_nil_end; auto.
+rewrite H5; rewrite app_nil_r; auto.
 Qed.
  
 Theorem ulist_incl_length:
@@ -175,10 +175,10 @@ intros l1 l2 H1 Hi Hi0; case ulist_incl_permutation with ( 2 := Hi ); auto.
 intros l3 Hl3; rewrite permutation_length with ( 1 := Hl3 ); auto.
 rewrite length_app; simpl; auto with arith.
 generalize Hl3; case l3; simpl; auto with arith.
-rewrite <- app_nil_end; auto.
+rewrite app_nil_r; auto.
 intros H2; case Hi0; auto.
 intros a HH; apply permutation_in with ( 1 := H2 ); auto.
-intros a l Hl0; (rewrite plus_comm; simpl; rewrite plus_comm; auto with arith).
+intros a l Hl0; (rewrite Nat.add_comm; simpl; rewrite Nat.add_comm; auto with arith).
 Qed.
  
 Theorem in_inv_dec:
@@ -225,19 +225,18 @@ rewrite length_app; auto with arith.
 intros b [l3 [l4 [l5 [Hl3 Hl4]]]]; subst l1.
 exists b; exists (a :: l3); exists l4; exists (l5 ++ (a :: l2)); split; simpl;
  auto.
-(repeat (rewrite <- ass_app; simpl)); auto.
+(repeat (rewrite <- app_assoc; simpl)); auto.
 apply ulist_cons; auto.
 contradict Hl2; auto.
 replace (l3 ++ (b :: (l4 ++ (b :: l5)))) with ((l3 ++ (b :: l4)) ++ (b :: l5));
  auto with datatypes.
-(repeat (rewrite <- ass_app; simpl)); auto.
+(repeat (rewrite <- app_assoc; simpl)); auto.
 case (H l); auto; intros a1 [l1 [l2 [l3 [Hl3 Hl4]]]]; subst l.
 exists a1; exists (a :: l1); exists l2; exists l3; split; auto.
 simpl; apply ulist_cons; auto.
 contradict H1.
 replace (l1 ++ (a1 :: (l2 ++ (a1 :: l3))))
      with ((l1 ++ (a1 :: l2)) ++ (a1 :: l3)); auto with datatypes.
-(repeat (rewrite <- ass_app; simpl)); auto.
 Qed.
  
 Theorem incl_length_repetition:
@@ -255,8 +254,8 @@ apply ulist_incl_length; auto.
 Qed.
  
 End UniqueList.
-Implicit Arguments ulist [A].
-Hint Constructors ulist .
+Arguments ulist [A].
+Hint Constructors ulist : core.
  
 Theorem ulist_map:
  forall (A B : Set) (f : A ->  B) l,

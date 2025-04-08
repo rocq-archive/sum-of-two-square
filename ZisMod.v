@@ -23,20 +23,20 @@ Require Import Iterator.
 Require Import UList.
 Open Scope Z_scope.
  
-Definition Zis_mod := fun a b n => Zdivide n (a - b).
+Definition Zis_mod := fun a b n => Z.divide n (a - b).
  
 Theorem Zis_mod_def:
- forall a b n, 0 < n -> Zmod a n = Zmod b n ->  Zis_mod a b n.
+ forall a b n, 0 < n -> Z.modulo  a n = Z.modulo  b n ->  Zis_mod a b n.
 intros a b n H H1; red.
 exists (a / n - b / n).
 apply trans_equal with ((n * (a / n) + b mod n) - (n * (b / n) + b mod n)).
 pattern (b mod n) at 1; rewrite <- H1.
-(repeat rewrite <- Z_div_mod_eq); auto with zarith.
+(repeat rewrite <- Z_div_mod_eq_full); auto with zarith.
 ring.
 Qed.
  
 Theorem Zis_mod_def_inv:
- forall a b n, 0 < n -> Zis_mod a b n ->  Zmod a n = Zmod b n.
+ forall a b n, 0 < n -> Zis_mod a b n ->  Z.modulo  a n = Z.modulo  b n.
 intros a b n H11 H2; replace a with ((a - b) + b); auto with zarith.
 inversion_clear H2 as [x Hx].
 rewrite Hx.
@@ -47,10 +47,10 @@ Theorem Zis_mod_ref: forall a n,  Zis_mod a a n.
 intros a n; exists 0; auto with zarith.
 Qed.
  
-Theorem Zis_mod_mod: forall a n, 0 < n ->  Zis_mod a (Zmod a n) n.
+Theorem Zis_mod_mod: forall a n, 0 < n ->  Zis_mod a (Z.modulo  a n) n.
 intros a n H1; red.
-pattern a at 1; rewrite (Z_div_mod_eq a n); auto with zarith.
-exists (Zdiv a n); ring.
+pattern a at 1; rewrite (Z_div_mod_eq_full a n); auto with zarith.
+exists (Z.div a n); ring.
 Qed.
  
 Theorem Zis_mod_sym: forall a b n, Zis_mod a b n ->  Zis_mod b a n.
@@ -68,14 +68,12 @@ Theorem Zis_mod_plus:
  forall a b c d n, Zis_mod a b n -> Zis_mod c d n ->  Zis_mod (a + c) (b + d) n.
 intros a b c d n [x H1] [y H2]; exists (x + y).
 apply trans_equal with ((a - b) + (c - d)); auto with zarith.
-rewrite H1; rewrite H2; auto with zarith.
 Qed.
  
 Theorem Zis_mod_minus:
  forall a b c d n, Zis_mod a b n -> Zis_mod c d n ->  Zis_mod (a - c) (b - d) n.
 intros a b c d n [x H1] [y H2]; exists (x - y).
 apply trans_equal with ((a - b) - (c - d)); auto with zarith.
-rewrite H1; rewrite H2; ring.
 Qed.
  
 Theorem Zis_mod_minus_0: forall a b n, Zis_mod a b n ->  Zis_mod (a - b) 0 n.
@@ -94,8 +92,8 @@ Qed.
 Theorem Zis_mod_cancel:
  forall a b c m, rel_prime a m -> Zis_mod (a * b) (a * c) m ->  Zis_mod b c m.
 intros a b c m H1 H2.
-assert (H3: Zdivide m (a * b - a * c)); auto with zarith.
-assert (H4: Zdivide m (a * (b - c))); auto with zarith.
+assert (H3: Z.divide m (a * b - a * c)); auto with zarith.
+assert (H4: Z.divide m (a * (b - c))); auto with zarith.
 rewrite Zmult_minus_distr_l; auto with zarith.
 red; apply Gauss with a; auto with zarith.
 red.
