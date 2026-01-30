@@ -14,9 +14,9 @@
 (* 02110-1301 USA                                                     *)
 
 
-Require Export List.
+From Stdlib Require Export List.
 Require Export Permutation.
-Require Import Arith.
+From Stdlib Require Import Arith.
  
 Section Iterator.
 Variables A B : Set.

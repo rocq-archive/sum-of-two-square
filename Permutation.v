@@ -23,7 +23,7 @@
                                                                      
                                     Laurent.Thery@inria.fr (2003)    
   **********************************************************************)
-Require Export List.
+From Stdlib Require Export List.
 Require Export Aux.
  
 Section permutation.

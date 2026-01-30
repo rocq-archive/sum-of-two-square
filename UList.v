@@ -23,10 +23,10 @@
                                                                      
                                     Laurent.Thery@inria.fr (2003)    
   **********************************************************************)
-Require Import List.
-Require Import Arith.
+From Stdlib Require Import List.
+From Stdlib Require Import Arith.
 Require Import Permutation.
-Require Import ListSet.
+From Stdlib Require Import ListSet.
  
 Section UniqueList.
 Variable A : Set.

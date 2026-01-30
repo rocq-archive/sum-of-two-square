@@ -22,14 +22,14 @@
                                                                      
                                     Laurent.Thery@inria.fr (2003)    
   **********************************************************************)
-Require Export List.
-Require Export Arith.
-Require Export ZArith.
-Require Export ZArithRing.
-Require Export Znumtheory.
+From Stdlib Require Export List.
+From Stdlib Require Export Arith.
+From Stdlib Require Export ZArith.
+From Stdlib Require Export ZArithRing.
+From Stdlib Require Export Znumtheory.
 Require Export Tactic.
-Require Import Inverse_Image.
-Require Import Wf_nat.
+From Stdlib Require Import Inverse_Image.
+From Stdlib Require Import Wf_nat.
 
 (* 
    Some properties on list operators: app, map,...
@@ -50,7 +50,8 @@ Theorem list_length_ind:
   (forall (l2 : list A), length l2 < length l1 ->  P l2) ->  P l1) ->
  forall (l : list A),  P l.
 intros P H l;
- apply well_founded_ind with ( R := fun (x y : list A) => (length x < length y)%nat );
+ apply well_founded_ind with 
+   ( R := fun (x y : list A) => (length x < length y)%nat );
  auto.
 apply wf_inverse_image with ( R := lt ); auto.
 apply lt_wf.
@@ -154,7 +155,7 @@ Theorem same_length_ex:
   (exists l4 ,
    exists l5 ,
    exists b : B ,
-   length l1 = length l4 /\ (length l2 = length l5 /\ l3 = l4 ++ (b :: l5))   ).
+   length l1 = length l4 /\ (length l2 = length l5 /\ l3 = l4 ++ (b :: l5))).
 intros a l1; elim l1; simpl; auto.
 intros l2 l3; case l3; simpl; (try (intros; discriminate)).
 intros b l H; exists (nil (A:=B)); exists l; exists b; (repeat (split; auto)).
@@ -282,7 +283,8 @@ Qed.
 (* Properties of Zdivide
    *)
  
-Theorem Zdivide_trans: forall a b c, Z.divide a b -> Z.divide b c ->  Z.divide a c.
+Theorem Zdivide_trans:
+  forall a b c, Z.divide a b -> Z.divide b c ->  Z.divide a c.
 intros a b c [d H1] [e H2]; exists (d * e)%Z; auto with zarith.
 Qed.
 
@@ -300,14 +302,16 @@ exists (- x)%Z; ring.
 exists x; ring.
 Qed.
 
-Theorem Zdivide_le: forall a b, (0 <= a)%Z -> (0 < b)%Z -> Z.divide a b ->  (a <= b)%Z.
+Theorem Zdivide_le: 
+  forall a b, (0 <= a)%Z -> (0 < b)%Z -> Z.divide a b ->  (a <= b)%Z.
 intros a b H1 H2 [q H3]; subst b.
 case (Zle_lt_or_eq 0 a); auto with zarith; intros H3.
 case (Zle_lt_or_eq 0 q); auto with zarith.
 intros H4; apply Z.le_trans with (1 * a)%Z; auto with zarith.
 Qed.
 
-Theorem Zdivide_Zdiv_eq: forall a b, (0 < a)%Z -> Z.divide a b ->  b = (a * (b / a))%Z.
+Theorem Zdivide_Zdiv_eq: 
+  forall a b, (0 < a)%Z -> Z.divide a b ->  b = (a * (b / a))%Z.
 intros a b Hb Hc.
 pattern b at 1; rewrite (Z_div_mod_eq_full b a); auto with zarith.
 rewrite (Zdivide_mod b a); auto with zarith.
@@ -422,7 +426,8 @@ Qed.
    *)
  
 Theorem Zmod_mult:
- forall a b n, (0 < n)%Z ->  Z.modulo (a * b) n = Z.modulo (Z.modulo  a n * Z.modulo  b n) n.
+ forall a b n, (0 < n)%Z ->  
+   Z.modulo (a * b) n = Z.modulo (Z.modulo  a n * Z.modulo  b n) n.
 intros a b n H.
 pattern a at 1; rewrite (Z_div_mod_eq_full a n); auto with zarith.
 pattern b at 1; rewrite (Z_div_mod_eq_full b n); auto with zarith.
@@ -435,7 +440,8 @@ apply Z_mod_plus; auto with zarith.
 Qed.
 
 Theorem Zmod_plus_eq:
- forall a b n, (0 < n)%Z ->  Z.modulo (a + b)%Z n = Z.modulo (Z.modulo a n + Z.modulo b n)%Z n.
+ forall a b n, (0 < n)%Z ->
+   Z.modulo (a + b)%Z n = Z.modulo (Z.modulo a n + Z.modulo b n)%Z n.
 intros a b n H.
 pattern a at 1; rewrite (Z_div_mod_eq_full a n); auto with zarith.
 pattern b at 1; rewrite (Z_div_mod_eq_full b n); auto with zarith.
@@ -445,7 +451,8 @@ apply Z_mod_plus; auto with zarith.
 Qed.
 
  
-Theorem Zmod_mod: forall a n, (0 < n)%Z ->  Z.modulo (Z.modulo a n) n = Z.modulo a n.
+Theorem Zmod_mod: 
+  forall a n, (0 < n)%Z ->  Z.modulo (Z.modulo a n) n = Z.modulo a n.
 intros a n H.
 pattern a at 2; rewrite (Z_div_mod_eq_full a n); auto with zarith.
 rewrite Zplus_comm; rewrite Zmult_comm.
@@ -601,7 +608,8 @@ Defined.
 
  
 Theorem prime_def:
- forall p, (1 < p)%Z -> (forall n, ( 1 < n < p )%Z ->  ~ Z.divide n p) ->  prime p.
+ forall p, 
+   (1 < p)%Z -> (forall n, ( 1 < n < p )%Z ->  ~ Z.divide n p) ->  prime p.
 intros p H1 H2.
 apply prime_intro; auto.
 intros n H3.

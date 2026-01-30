@@ -18,8 +18,8 @@
     Proof of Bertrand's conjecture: Product.v
                                          Laurent.Thery@inria.fr (2002)
   *********************************************************************)
-Require Import ZArith.
-Require ZArithRing.
+From Stdlib Require Import ZArith.
+From Stdlib Require ZArithRing.
 Require Export Aux.
 Require Export Iterator.
 Require Export ZProgression.
@@ -29,7 +29,7 @@ Open Scope Z_scope.
  
 Definition Zprod :=
    fun n m f =>
-   if Zle_bool n m
+   if (n <=? m)
      then iter 1 f Zmult (progression Z.succ n (Z.abs_nat ((1 + m) - n)))
      else iter 1 f Zmult (progression Z.pred n (Z.abs_nat ((1 + n) - m))).
 Hint Unfold Zprod : core.
@@ -48,8 +48,8 @@ Qed.
  
 Lemma Zprod_swap: forall (n m : Z) (f : Z ->  Z),  Zprod n m f = Zprod m n f.
 intros n m f; unfold Zprod.
-generalize (Zle_cases n m) (Zle_cases m n); case (Zle_bool n m);
- case (Zle_bool m n); auto with arith.
+generalize (Zle_cases n m) (Zle_cases m n); case (Z.leb n m);
+ case (Z.leb m n); auto with arith.
 intros; replace n with m; auto with zarith.
 3:intros H1 H2; contradict H2; auto with zarith.
 intros H1 H2; apply iter_permutation; auto with zarith.
@@ -92,7 +92,7 @@ rewrite <- Zabs2Nat.inj_sub; auto with zarith.
 subst m.
 rewrite Zprod_nn; auto with zarith.
 unfold Zprod; generalize (Zle_cases n p); generalize (Zle_cases (n + 1) p);
- case (Zle_bool n p); case (Zle_bool (n + 1) p); auto with zarith.
+ case (Z.leb n p); case (Z.leb (n + 1) p); auto with zarith.
 intros H1 H2.
 replace (Z.abs_nat ((1 + p) - n)) with (S (Z.abs_nat (p - n))); auto with zarith.
 replace (n + 1) with (Z.succ n); auto with zarith.
@@ -151,7 +151,7 @@ Qed.
 Lemma Zprod_mult:
  forall (n m : Z) (f g : Z ->  Z),
   Zprod n m f * Zprod n m g = Zprod n m (fun (i : Z) => f i * g i).
-intros n m f g; unfold Zprod; case (Zle_bool n m); apply iter_comp;
+intros n m f g; unfold Zprod; case (Z.leb n m); apply iter_comp;
  auto with zarith.
 Qed.
  
@@ -176,7 +176,7 @@ Lemma Zprod_pred:
 intros n m f.
 unfold Zprod.
 generalize (Zle_cases n m); generalize (Zle_cases (n + 1) (m + 1));
- case (Zle_bool n m); case (Zle_bool (n + 1) (m + 1)); auto with zarith.
+ case (Z.leb n m); case (Z.leb (n + 1) (m + 1)); auto with zarith.
 replace ((1 + (m + 1)) - (n + 1)) with ((1 + m) - n); auto with zarith.
 intros H1 H2; cut (exists c , c = Z.abs_nat ((1 + m) - n) ).
 intros [c H3]; rewrite <- H3.
@@ -225,7 +225,7 @@ Theorem Zprod_com:
  forall (i j k l : Z) (f : Z -> Z ->  Z),
   Zprod i j (fun x => Zprod k l (fun y => f x y)) =
   Zprod k l (fun y => Zprod i j (fun x => f x y)).
-intros; unfold Zprod; case (Zle_bool i j); case (Zle_bool k l); apply iter_com;
+intros; unfold Zprod; case (Z.leb i j); case (Z.leb k l); apply iter_com;
  auto with zarith.
 Qed.
  

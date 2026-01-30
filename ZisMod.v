@@ -14,8 +14,8 @@
 (* 02110-1301 USA                                                     *)
 
 
-Require Export ZArith.
-Require Export Znumtheory.
+From Stdlib Require Export ZArith.
+From Stdlib Require Export Znumtheory.
 Require Export ZProd.
 Require Export ZFact.
 Require Import Permutation.
