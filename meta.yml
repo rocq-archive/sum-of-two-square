@@ -39,11 +39,11 @@ license:
   identifier: MIT
 
 supported_rocq_versions:
-  text: '9.1 or later'
-  opam: '{(>= "9.1")}'
+  text: '9.2 or later'
+  opam: '{(>= "9.2")}'
 
 tested_rocq_opam_versions:
-- version: '9.1'
+- version: '9.2'
 
 namespace: SumOfTwoSquare
 
